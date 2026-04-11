@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>דשבורד מעקב שעות עובד</title>
+  <style>
+    :root {
+      --bg1: #eef2ff;
+      --bg2: #f8fafc;
+      --card: rgba(255,255,255,0.9);
+      --text: #172033;
+      --muted: #5f6b85;
+      --border: #dbe2f0;
+      --accent: #4f46e5;
+      --accent2: #06b6d4;
+      --good: #16a34a;
+      --good-bg: #dcfce7;
+      --warn: #d97706;
+      --warn-bg: #fef3c7;
+      --bad: #dc2626;
+      --bad-bg: #fee2e2;
+      --neutral-bg: #eef2ff;
+      --shadow: 0 18px 45px rgba(29, 41, 57, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.5;
+      background:
+        radial-gradient(circle at top right, rgba(79,70,229,0.18), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(6,182,212,0.12), transparent 28%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    .hero {
+      background: linear-gradient(135deg, rgba(79,70,229,0.94), rgba(6,182,212,0.84));
+      color: #fff;
+      border-radius: 28px;
+      padding: 28px 30px;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+    .hero p {
+      margin: 0;
+      font-size: 16px;
+      color: rgba(255,255,255,0.9);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(340px, 430px) 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 15px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    input:focus {
+      border-color: rgba(79,70,229,0.55);
+      box-shadow: 0 0 0 4px rgba(79,70,229,0.08);
+    }
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 10px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fff;
+      font-weight: 700;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .check-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(29, 41, 57, 0.08);
+    }
+    .check-item:has(input:checked) {
+      border-color: rgba(79,70,229,0.35);
+      background: linear-gradient(180deg, #ffffff, #eef2ff);
+      color: #312e81;
+    }
+    .check-item input {
+      width: auto;
+      margin: 0;
+      transform: scale(1.15);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    .primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+    .secondary {
+      color: #1e293b;
+      background: #e9eefc;
+    }
+    .month-preview {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .dashboard-top {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .traffic-card {
+      border-radius: 22px;
+      padding: 22px;
+      color: white;
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #64748b, #94a3b8);
+      transition: background 0.25s ease;
+    }
+    .traffic-card.good { background: linear-gradient(135deg, #15803d, #22c55e); }
+    .traffic-card.warn { background: linear-gradient(135deg, #c2410c, #f59e0b); }
+    .traffic-card.bad { background: linear-gradient(135deg, #b91c1c, #ef4444); }
+    .traffic-label {
+      font-size: 14px;
+      opacity: 0.92;
+    }
+    .traffic-main {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1;
+      margin: 6px 0;
+    }
+    .traffic-sub {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .lights {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+    }
+    .light {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25);
+      opacity: 0.55;
+    }
+    .light.active {
+      opacity: 1;
+      box-shadow: 0 0 0 5px rgba(255,255,255,0.16), inset 0 0 0 2px rgba(255,255,255,0.25);
+    }
+    .light.red.active { background: #ef4444; }
+    .light.yellow.active { background: #fbbf24; }
+    .light.green.active { background: #22c55e; }
+    .mini-summary {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+    }
+    .mini-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #dbe2f0;
+    }
+    .mini-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .mini-row .k { color: var(--muted); }
+    .mini-row .v { font-weight: 800; font-size: 18px; }
+    .results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .metric {
+      border-radius: 20px;
+      padding: 18px;
+      color: #0f172a;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      border: 1px solid #e5ecf6;
+      min-height: 118px;
+    }
+    .metric .label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .metric .value {
+      font-size: 31px;
+      font-weight: 800;
+      line-height: 1.05;
+    }
+    .metric.good { background: linear-gradient(180deg, #dcfce7, #bbf7d0); border-color: #86efac; color: #166534; }
+    .metric.warn { background: linear-gradient(180deg, #fef3c7, #fde68a); border-color: #fcd34d; color: #92400e; }
+    .metric.bad { background: linear-gradient(180deg, #fee2e2, #fecaca); border-color: #fca5a5; color: #991b1b; }
+    .metric.neutral { background: linear-gradient(180deg, #eef2ff, #e0e7ff); border-color: #c7d2fe; }
+    .bar-wrap {
+      margin-top: 22px;
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 16px;
+      border: 1px solid #e5ecf6;
+    }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .bar {
+      height: 26px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #94a3b8, #cbd5e1);
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+    .status {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+    .status.good { background: var(--good-bg); color: var(--good); border-color: #bbf7d0; }
+    .status.warn { background: var(--warn-bg); color: var(--warn); border-color: #fde68a; }
+    .status.bad { background: var(--bad-bg); color: var(--bad); border-color: #fecaca; }
+    .summary {
+      margin-top: 16px;
+      color: #334155;
+      background: #fff;
+      border: 1px dashed #cbd5e1;
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    @media (max-width: 980px) {
+      .layout, .dashboard-top { grid-template-columns: 1fr; }
+      .container { padding: 18px; }
+      .hero h1 { font-size: 28px; }
+      .traffic-main { font-size: 46px; }
+    }
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 1cm;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body { 
+        background: white; 
+        font-size: 12px;
+      }
+      .container { 
+        padding: 0; 
+        max-width: 100%;
+      }
+      .hero { 
+        box-shadow: none; 
+        padding: 15px 20px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+      }
+      .hero h1 { font-size: 22px; margin-bottom: 4px; }
+      .hero p { font-size: 13px; }
+      .layout {
+        gap: 15px;
+        grid-template-columns: 320px 1fr;
+      }
+      .card { 
+        box-shadow: none; 
+        backdrop-filter: none; 
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #dbe2f0;
+      }
+      .card h2 { font-size: 18px; margin-bottom: 10px; }
+      label { font-size: 12px; margin: 8px 0 4px; }
+      input, select { 
+        padding: 8px 10px; 
+        font-size: 12px; 
+        border-radius: 8px;
+      }
+      .check-item { padding: 8px; font-size: 11px; border-radius: 10px; }
+      .actions, .note { display: none !important; }
+      
+      .dashboard-top { gap: 12px; margin-bottom: 12px; }
+      .traffic-card { padding: 15px; min-height: auto; border-radius: 14px; }
+      .traffic-main { font-size: 38px; margin: 2px 0; }
+      .traffic-sub { font-size: 13px; }
+      .mini-summary { padding: 12px; gap: 8px; border-radius: 14px; }
+      .mini-row .v { font-size: 15px; }
+      .mini-row { padding-bottom: 6px; }
+      
+      .results { 
+        gap: 10px; 
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
+      }
+      .metric { padding: 10px; min-height: auto; border-radius: 12px; }
+      .metric .label { font-size: 11px; margin-bottom: 4px; }
+      .metric .value { font-size: 20px; }
+      
+      .bar-wrap { margin-top: 15px; padding: 12px; border-radius: 12px; }
+      .bar { height: 20px; }
+      .bar-label { font-size: 12px; margin-bottom: 6px; }
+      
+      .status { margin-top: 12px; padding: 12px; font-size: 12px; border-radius: 10px; }
+      .summary { margin-top: 12px; padding: 12px; font-size: 11px; border-radius: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>דשבורד מעקב שעות עובד</h1>
+      <p>הזן נתוני חודש, שעות שסוכמו, שעות בפועל וימי היעדרות בתשלום. המערכת תחשב את מספר ימי העבודה בחודש, תקזז חופשה/מחלה ותציג תמונת עמידה חודשית ברורה בסגנון רמזור.</p>
+    </section>
+
+    <div class="layout">
+      <section class="card">
+        <h2>הזנת נתונים</h2>
+
+        <label for="employeeName">שם העובד</label>
+        <input id="employeeName" type="text" placeholder="למשל: אהרן" />
+
+        <label for="monthInput">החודש לחישוב</label>
+        <input id="monthInput" type="month" />
+        <div class="month-preview" id="monthPreview">בחר חודש כדי לחשב את מספר ימי העבודה באותו חודש.</div>
+
+        <label>ימי העבודה הקבועים בשבוע</label>
+        <div class="checkbox-grid" id="weekdayCheckboxes">
+          <label class="check-item"><input type="checkbox" value="0"> ראשון</label>
+          <label class="check-item"><input type="checkbox" value="1"> שני</label>
+          <label class="check-item"><input type="checkbox" value="2"> שלישי</label>
+          <label class="check-item"><input type="checkbox" value="3"> רביעי</label>
+          <label class="check-item"><input type="checkbox" value="4"> חמישי</label>
+          <label class="check-item"><input type="checkbox" value="5"> שישי</label>
+          <label class="check-item"><input type="checkbox" value="6"> שבת</label>
+        </div>
+
+        <label for="agreedDailyHours">ממוצע שעות עבודה ביום (כפי שסוכם)</label>
+        <input id="agreedDailyHours" type="number" min="0" step="0.01" placeholder="למשל: 7" />
+
+        <label for="actualHoursMonth">כמות שעות שהעובד עבד בפועל בחודש</label>
+        <input id="actualHoursMonth" type="number" min="0" step="0.01" placeholder="למשל: 98.5" />
+
+        <label for="paidLeaveDays">ימי מחלה / חופשה בתשלום לקיזוז</label>
+        <input id="paidLeaveDays" type="number" min="0" step="0.5" value="0" />
+
+        <div class="actions">
+          <button class="primary" type="button" onclick="calculateReport()">חשב</button>
+          <button class="secondary" type="button" onclick="window.print()">שמירה / הורדה ל-PDF</button>
+          <button class="secondary" type="button" onclick="resetFormCustom()">ניקוי טופס</button>
+        </div>
+        <div class="note">החישוב היומי משמש רק ברקע לצורך קיזוז ימי חופשה/מחלה מהמסגרת החודשית. התצוגה עצמה מתמקדת בתמונה החודשית.</div>
+      </section>
+
+      <section class="card" id="reportSection">
+        <h2>תוצאות חודשיות</h2>
+
+        <div class="dashboard-top">
+          <div class="traffic-card warn" id="trafficCard">
+            <div>
+              <div class="traffic-label">רמת עמידה ביעד החודשי</div>
+              <div class="traffic-main" id="completionRateBig">0%</div>
+              <div class="traffic-sub" id="trafficText">הזן נתונים כדי לראות את מצב העמידה.</div>
+            </div>
+            <div class="lights">
+              <span class="light red" id="lightRed"></span>
+              <span class="light yellow active" id="lightYellow"></span>
+              <span class="light green" id="lightGreen"></span>
+            </div>
+          </div>
+
+          <div class="mini-summary">
+            <div class="mini-row"><span class="k">שעות נדרשות אחרי קיזוז</span><span class="v" id="requiredHoursAfterLeaveTop">0</span></div>
+            <div class="mini-row"><span class="k">שעות בפועל</span><span class="v" id="actualHoursOutTop">0</span></div>
+            <div class="mini-row"><span class="k">פער שעות</span><span class="v" id="hoursGapTop">0</span></div>
+          </div>
+        </div>
+
+        <div class="results">
+          <div class="metric neutral">
+            <div class="label">ימי עבודה בחודש לפי לוח העבודה</div>
+            <div class="value" id="scheduledDays">0</div>
+          </div>
+          <div class="metric neutral">
+            <div class="label">ימי היעדרות בתשלום לקיזוז</div>
+            <div class="value" id="leaveDays">0</div>
+          </div>
+          <div class="metric neutral">
+            <div class="label">ימי עבודה נדרשים בפועל אחרי קיזוז</div>
+            <div class="value" id="requiredDaysAfterLeave">0</div>
+          </div>
+          <div class="metric neutral">
+            <div class="label">יעד שעות חודשי בסיסי (לפני קיזוז)</div>
+            <div class="value" id="agreedHoursOut">0</div>
+          </div>
+          <div class="metric neutral">
+            <div class="label">שעות נדרשות אחרי קיזוז</div>
+            <div class="value" id="requiredHoursAfterLeave">0</div>
+          </div>
+          <div class="metric neutral">
+            <div class="label">שעות עבודה בפועל</div>
+            <div class="value" id="actualHoursOut">0</div>
+          </div>
+          <div class="metric neutral" id="gapMetric">
+            <div class="label">פער שעות</div>
+            <div class="value" id="hoursGap">0</div>
+          </div>
+          <div class="metric neutral" id="rateMetric">
+            <div class="label">אחוז עמידה ביעד</div>
+            <div class="value" id="completionRate">0%</div>
+          </div>
+        </div>
+
+        <div class="bar-wrap">
+          <div class="bar-label">
+            <span>יחס שעות בפועל מול שעות נדרשות אחרי קיזוז</span>
+            <span id="barPercentText">0%</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill" id="progressBar"></div>
+          </div>
+        </div>
+
+        <div class="status warn" id="statusBox">הזן נתונים ולחץ על "חשב".</div>
+        <div class="summary" id="summaryText">החישוב יתבסס על ימי השבוע שתסמן, על החודש הנבחר, ועל מספר ימי חופשה/מחלה בתשלום שהוזנו.</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const monthInput = document.getElementById('monthInput');
+    monthInput.addEventListener('change', updateMonthPreview);
+
+    function updateMonthPreview() {
+      const monthValue = monthInput.value;
+      const preview = document.getElementById('monthPreview');
+      if (!monthValue) {
+        preview.textContent = 'בחר חודש כדי לחשב את מספר ימי העבודה באותו חודש.';
+        return;
+      }
+      const [year, month] = monthValue.split('-').map(Number);
+      const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+      const daysInMonth = new Date(year, month, 0).getDate();
+      preview.textContent = `${monthNames[month - 1]} ${year} כולל ${daysInMonth} ימים קלנדריים.`;
+    }
+
+    function getSelectedWeekdays() {
+      return Array.from(document.querySelectorAll('#weekdayCheckboxes input:checked')).map(cb => Number(cb.value));
+    }
+
+    function countMatchingWeekdaysInMonth(year, month, selectedWeekdays) {
+      const daysInMonth = new Date(year, month, 0).getDate();
+      let count = 0;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const jsDay = new Date(year, month - 1, day).getDay();
+        if (selectedWeekdays.includes(jsDay)) count++;
+      }
+      return count;
+    }
+
+    function formatNum(value) {
+      if (!isFinite(value)) return '0';
+      return Number(value).toLocaleString('he-IL', { maximumFractionDigits: 2 });
+    }
+
+    function getTrafficMode(rate) {
+      if (rate >= 97) {
+        return {
+          key: 'good',
+          text: 'עמידה גבוהה מאוד ביעד',
+          status: 'העובד קרוב מאוד ליעד או עומד בו במלואו.',
+          bar: 'linear-gradient(90deg, #16a34a, #4ade80)'
+        };
+      }
+      if (rate >= 85) {
+        return {
+          key: 'warn',
+          text: 'עמידה חלקית ביעד',
+          status: 'קיים פער שעות, אך העובד עדיין קרוב יחסית ליעד החודשי.',
+          bar: 'linear-gradient(90deg, #d97706, #fbbf24)'
+        };
+      }
+      return {
+        key: 'bad',
+        text: 'פער משמעותי מהיעד',
+        status: 'קיים חוסר שעות משמעותי ביחס למה שנדרש באותו חודש.',
+        bar: 'linear-gradient(90deg, #dc2626, #f87171)'
+      };
+    }
+
+    function applyTrafficUI(mode, completionRate) {
+      const trafficCard = document.getElementById('trafficCard');
+      const statusBox = document.getElementById('statusBox');
+      const progressBar = document.getElementById('progressBar');
+      const gapMetric = document.getElementById('gapMetric');
+      const rateMetric = document.getElementById('rateMetric');
+
+      trafficCard.className = `traffic-card ${mode.key}`;
+      statusBox.className = `status ${mode.key}`;
+      progressBar.style.background = mode.bar;
+      gapMetric.className = `metric ${mode.key}`;
+      rateMetric.className = `metric ${mode.key}`;
+
+      document.getElementById('lightRed').classList.toggle('active', mode.key === 'bad');
+      document.getElementById('lightYellow').classList.toggle('active', mode.key === 'warn');
+      document.getElementById('lightGreen').classList.toggle('active', mode.key === 'good');
+
+      document.getElementById('completionRateBig').textContent = `${formatNum(completionRate)}%`;
+      document.getElementById('trafficText').textContent = mode.text;
+      statusBox.textContent = mode.status;
+    }
+
+    function calculateReport() {
+      const employeeName = document.getElementById('employeeName').value.trim();
+      const monthValue = document.getElementById('monthInput').value;
+      const agreedDailyHours = parseFloat(document.getElementById('agreedDailyHours').value) || 0;
+      const actualHoursMonth = parseFloat(document.getElementById('actualHoursMonth').value) || 0;
+      const paidLeaveDays = parseFloat(document.getElementById('paidLeaveDays').value) || 0;
+      const selectedWeekdays = getSelectedWeekdays();
+
+      const statusBox = document.getElementById('statusBox');
+      const summaryText = document.getElementById('summaryText');
+
+      if (!monthValue) {
+        statusBox.className = 'status bad';
+        statusBox.textContent = 'יש לבחור חודש לחישוב.';
+        summaryText.textContent = 'ללא חודש נבחר, אי אפשר לחשב כמה ימי עבודה היו באותו חודש.';
+        return;
+      }
+      if (selectedWeekdays.length === 0) {
+        statusBox.className = 'status bad';
+        statusBox.textContent = 'יש לסמן לפחות יום עבודה אחד בשבוע.';
+        summaryText.textContent = 'החישוב של ימי העבודה החודשיים מבוסס על ימי השבוע הקבועים של העובד.';
+        return;
+      }
+      if (agreedDailyHours <= 0) {
+        statusBox.className = 'status bad';
+        statusBox.textContent = 'יש להזין ממוצע שעות ליום כפי שסוכם.';
+        summaryText.textContent = 'המערכת צריכה את מסגרת השעות היומית המוסכמת כדי לחשב את היעד החודשי.';
+        return;
+      }
+
+      const [year, month] = monthValue.split('-').map(Number);
+      const scheduledDays = countMatchingWeekdaysInMonth(year, month, selectedWeekdays);
+      const requiredDaysAfterLeave = Math.max(0, scheduledDays - paidLeaveDays);
+      
+      const agreedHoursMonth = scheduledDays * agreedDailyHours;
+      const requiredHoursAfterLeave = requiredDaysAfterLeave * agreedDailyHours;
+      const hoursGap = actualHoursMonth - requiredHoursAfterLeave;
+      const completionRate = requiredHoursAfterLeave > 0 ? (actualHoursMonth / requiredHoursAfterLeave) * 100 : 0;
+      const displayRateForBar = Math.max(0, Math.min(100, completionRate));
+      const mode = getTrafficMode(completionRate);
+
+      document.getElementById('scheduledDays').textContent = formatNum(scheduledDays);
+      document.getElementById('leaveDays').textContent = formatNum(paidLeaveDays);
+      document.getElementById('requiredDaysAfterLeave').textContent = formatNum(requiredDaysAfterLeave);
+      document.getElementById('agreedHoursOut').textContent = formatNum(agreedHoursMonth);
+      document.getElementById('requiredHoursAfterLeave').textContent = formatNum(requiredHoursAfterLeave);
+      document.getElementById('actualHoursOut').textContent = formatNum(actualHoursMonth);
+      document.getElementById('hoursGap').textContent = formatNum(hoursGap);
+      document.getElementById('completionRate').textContent = `${formatNum(completionRate)}%`;
+
+      document.getElementById('requiredHoursAfterLeaveTop').textContent = formatNum(requiredHoursAfterLeave);
+      document.getElementById('actualHoursOutTop').textContent = formatNum(actualHoursMonth);
+      document.getElementById('hoursGapTop').textContent = formatNum(hoursGap);
+
+      document.getElementById('progressBar').style.width = `${displayRateForBar}%`;
+      document.getElementById('barPercentText').textContent = `${formatNum(completionRate)}%`;
+
+      applyTrafficUI(mode, completionRate);
+
+      const monthNames = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+      const displayName = employeeName ? `לעובד ${employeeName}` : 'לעובד';
+      summaryText.textContent = `${displayName}, בחודש ${monthNames[month - 1]} ${year} היו ${formatNum(scheduledDays)} ימי עבודה מתוכננים. לפי ${formatNum(agreedDailyHours)} שעות ביום, היעד הבסיסי החודשי הוא ${formatNum(agreedHoursMonth)} שעות. לאחר קיזוז ${formatNum(paidLeaveDays)} ימי היעדרות בתשלום, נדרשו בפועל ${formatNum(requiredHoursAfterLeave)} שעות. בפועל הוזנו ${formatNum(actualHoursMonth)} שעות, ולכן הפער החודשי הוא ${formatNum(hoursGap)} שעות.`;
+    }
+
+    function resetFormCustom() {
+      document.getElementById('employeeName').value = '';
+      document.getElementById('monthInput').value = '';
+      document.getElementById('agreedDailyHours').value = '';
+      document.getElementById('actualHoursMonth').value = '';
+      document.getElementById('paidLeaveDays').value = '0';
+      document.querySelectorAll('#weekdayCheckboxes input').forEach(cb => cb.checked = false);
+
+      ['scheduledDays','leaveDays','requiredDaysAfterLeave','agreedHoursOut','requiredHoursAfterLeave','actualHoursOut','hoursGap','requiredHoursAfterLeaveTop','actualHoursOutTop','hoursGapTop']
+        .forEach(id => document.getElementById(id).textContent = '0');
+      document.getElementById('completionRate').textContent = '0%';
+      document.getElementById('completionRateBig').textContent = '0%';
+      document.getElementById('trafficText').textContent = 'הזן נתונים כדי לראות את מצב העמידה.';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressBar').style.background = 'linear-gradient(90deg, #94a3b8, #cbd5e1)';
+      document.getElementById('barPercentText').textContent = '0%';
+      document.getElementById('trafficCard').className = 'traffic-card warn';
+      document.getElementById('statusBox').className = 'status warn';
+      document.getElementById('statusBox').textContent = 'הזן נתונים ולחץ על "חשב".';
+      document.getElementById('summaryText').textContent = 'החישוב יתבסס על ימי השבוע שתסמן, על החודש הנבחר, ועל מספר ימי חופשה/מחלה בתשלום שהוזנו.';
+      document.getElementById('gapMetric').className = 'metric neutral';
+      document.getElementById('rateMetric').className = 'metric neutral';
+      document.getElementById('lightRed').classList.remove('active');
+      document.getElementById('lightYellow').classList.add('active');
+      document.getElementById('lightGreen').classList.remove('active');
+      updateMonthPreview();
+    }
+  </script>
+</body>
+</html>
